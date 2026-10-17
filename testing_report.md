@@ -15,7 +15,7 @@ Last verified: 2026-10-17, on Python 3.13, Postgres 16 (Docker), dependencies fr
 | Failure input: header-only CSV | Passed: `empty_source` WARNING, earlier loads still rebuilt, exit 0 |
 | Failure input: 3,000 junk rows | Passed: CRITICAL alert, gold blocked, exit 2 |
 | Agents: dry-run | Passed: no network call, cost estimate printed |
-| Agents: live LLM calls | Not re-run for this report (paid calls); see [Not covered](#not-covered) |
+| Agents: live LLM calls | Passed, in a run made by the project owner (Claude Opus 5.5); results read back from the database, not re-run by this report |
 
 ## 1. Unit tests
 
@@ -99,19 +99,33 @@ Exit code 0. Bronze read 10,280 rows, inserted 0 and skipped 10,280. Silver and 
 
 The junk and header-only files were generated in a temporary folder outside the project and deleted afterwards.
 
-### 2.5 Agent dry-runs (no network)
+### 2.5 Agents
 
-`LLM_PROVIDER=claude python -m agents.<name> --dry-run` printed these estimates and sent nothing:
+**Dry-run (no network).** `LLM_PROVIDER=claude python -m agents.<name> --dry-run` printed these worst-case estimates and sent nothing. The worst case assumes the full output cap (16k tokens on Claude):
 
-| Agent | Input tokens | Worst-case cost (Claude Opus 5.5) |
-|---|---|---|
-| Quality | about 2,878 | $0.0815 |
-| Semantic | about 2,577 | $0.0803 |
+| Agent | Input tokens | Worst-case cost, Opus 5.5 | Haiku 5.5 |
+|---|---|---|---|
+| Quality | about 2,836 | $0.331 | $0.0083 |
+| Semantic (`--full`) | about 2,577 | $0.330 | not run |
+
+This check found and fixed a bug: the estimate used a 3,500-token output cap for Claude, so the "worst case" ($0.08) was lower than the real cost of the quality run ($0.108).
+
+**Live run.** `run.py --stage all --with-agents` was run on 2026-10-17 with Claude Opus 5.5 (effort `low`) by the project owner. Read back from `lineage.agent_runs`, `lineage.pipeline_runs` and the files in `proposals/`:
+
+| Check | Result |
+|---|---|
+| Pipeline | All 8 stages `SUCCESS`; silver 10,250 + 30 DLQ; gold 368 rows |
+| Semantic agent | 1 request, 4,961 in / 1,858 out tokens, $0.057, 15 s; coverage 100%; 46/46 spellings and 46/46 swaps agree with the hand-built mapping; 0 dropped |
+| Silver `category_source` | `agent` 10,200, `agent_swap` 49, NULL 1 |
+| Quality agent | 1 request, 6,210 in / 4,158 out tokens, $0.108, 33 s; 11 findings; 8 expectations accepted, 0 rejected |
+| `bronze_agent` suite | 2 of 8 expectations pass on raw data (measurement only, never blocks) |
+
+Reviewing the quality agent's output against the code found one real mistake in its suggested code (month/day order for dash-separated dates); it is reported and never executed. See the README's Assessment.
 
 ## 3. Not covered
 
-- **Live agent calls.** The two agents were not run against a real LLM for this report because they make paid calls. Their recorded results (tokens, agreement with the baseline, what the agent got wrong) are in the README's Agent Assessment, taken from an earlier run. The `.agent_cache/` and the `lineage.agent_runs` rows from that run no longer exist, so those figures cannot be re-checked without a new run.
-- **Claude provider live.** Only the dry-run, the missing-credentials path and JSON parsing (unit test) are tested.
+- **Repeat of the live agent run.** The live run above was made once, by the project owner, and was not repeated for this report. A second run on the same data should be a cache hit (0 tokens); that is by design and was not re-checked here.
+- **Other providers.** Gemini and OpenAI were exercised only in earlier development runs; this report did not repeat them.
 - **Slack alert delivery.** Disabled by default (`ALERTS_ENABLED`); alerts are verified only as rows in `lineage.alerts`.
 - **Header-only file on an empty database.** The README states that silver's row-count gate fails and gold is blocked in that case. It was checked when written, but was not repeated for this report.
 - **Volume.** Only the 10,280-row dataset was run. See "What Changes at 100x" in the README.

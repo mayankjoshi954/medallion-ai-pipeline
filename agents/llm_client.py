@@ -15,7 +15,7 @@ import time
 
 from openai import AuthenticationError, OpenAI, RateLimitError
 
-from agents.claude_client import ProviderRejected, complete as claude_complete
+from agents.claude_client import MIN_MAX_TOKENS, ProviderRejected, complete as claude_complete
 from src.db import ROOT  # importing src.db also loads .env
 from src.lineage import log_agent_call
 
@@ -87,7 +87,8 @@ def complete_json(agent: str, system: str, user: str, *, dry_run: bool = False, 
     cached = use_cache and cache_file.exists()
     est_in = estimate_tokens(system + user)
     if dry_run:  # checked first so a dry run never writes proposals or lineage rows, even with a warm cache
-        est_cost = _cost(model, est_in, max_output_tokens)
+        worst_out = max(max_output_tokens, MIN_MAX_TOKENS) if provider["name"] == "claude" else max_output_tokens
+        est_cost = _cost(model, est_in, worst_out)
         log.info("%s DRY RUN: provider=%s model=%s ~%d input tokens, worst-case cost $%s%s. No request sent.",
                  agent, provider["name"], model, est_in, est_cost if est_cost is not None else "unknown",
                  " (cached: a real run would cost $0)" if cached else "")

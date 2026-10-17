@@ -1,5 +1,5 @@
 {
-  "_comment": "Expectations run by src/quality/run_gx.py. Same shape the Data Quality Agent proposes (proposals/quality_agent_expectations.json); a human merges accepted ones here. severity: critical blocks gold, warning is recorded, info is baseline measurement only.",
+  "_comment": "Expectations run by src/quality/run_gx.py. Hand-written baseline and silver gate. The Data Quality Agent's accepted expectations live separately in config/expectations_agent.json. severity: critical blocks gold, warning is recorded, info is measurement only.",
   "bronze_baseline": [
     {"type": "ExpectTableRowCountToBeBetween", "kwargs": {"min_value": 1}, "severity": "info",
      "why": "An empty landing table means the extract failed upstream, not that there is no data."},

@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS silver.tickets (
     resolution_notes       TEXT,
     cost                   NUMERIC(12, 2),
     sla_hours              INTEGER,
-    -- Anomalies we fixed or nulled but chose to KEEP the row for; see FLAGS in src/silver/rules.py for meanings.
+    -- Anomalies we fixed or nulled but chose to KEEP the row for; the flag names are listed in the README cleaning-rules table.
     data_quality_flags     TEXT[] NOT NULL DEFAULT '{}',
     -- lineage back to bronze
     source_row_hash        CHAR(64) NOT NULL,
@@ -25,8 +25,6 @@ CREATE TABLE IF NOT EXISTS silver.tickets (
     silver_run_id          TEXT     NOT NULL,
     silver_built_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
--- Added with the auto-applied semantic agent; keeps databases created before it in step.
-ALTER TABLE silver.tickets ADD COLUMN IF NOT EXISTS category_source TEXT;
 
 -- Dead-letter queue: rows we refuse to promote. Raw payload is preserved so they can be replayed after a rule fix.
 CREATE TABLE IF NOT EXISTS silver.rejected_rows (

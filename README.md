@@ -14,7 +14,7 @@ Bronze → Silver → Gold pipeline over 10,280 messy facility-support tickets, 
 - Python 3.13 at `/opt/homebrew/bin/python3.13` (the tested version; the pinned Great Expectations declares `<3.15`, but 3.14 is untested here)
 - For the agents only: an API key in `.env` (copy `.env.example`). The pipeline itself needs no key.
 
-**Run these three commands from the project folder (fresh clone)**
+**Run these three commands from the project folder (fresh clone).** Once the virtual environment exists, the whole stack is one line: `docker compose up -d --wait && .venv/bin/python run.py`.
 
 ```bash
 # 1. Create the virtual environment and install dependencies
@@ -151,7 +151,7 @@ cross-cutting
  reports/     — schema drift reports (Markdown), written when a file's schema differs or is checked
 ```
 
-**Tech choices:** plain Python CLI (`run.py`), Postgres 16 in Docker, Great Expectations for data-quality gates, pandera for schema drift. No dbt, Airflow or Alembic — intentional for a 10 k-row batch (see [Tradeoffs](#tradeoffs)).
+**Tech choices:** plain Python CLI (`run.py`), Postgres 16 in Docker (one schema per layer, `bronze` / `silver` / `gold`, plus `lineage`, so layers are separated by namespace and could get separate permissions), Great Expectations for data-quality gates, pandera for schema drift. No dbt, Airflow or Alembic — intentional for a 10 k-row batch (see [Tradeoffs](#tradeoffs)).
 
 ---
 
@@ -210,7 +210,7 @@ TRUNCATE + INSERT runs in a single transaction, so re-running changes no counts.
 
 ## Generated Markdown Outputs
 
-Everything in `proposals/` and `reports/` is generated and overwritten on each run. Both folders are empty until something writes to them: `proposals/` after an agent run, `reports/` after a bronze run or a drift check. Run results themselves live in the database (`lineage.*`) and the log.
+Everything in `proposals/` and `reports/` is generated and overwritten on each run. The repo includes the files from one live run (`proposals/*_output.md` and the drift report for `raw_tickets.csv`) as samples; running again replaces them. Run results themselves live in the database (`lineage.*`) and the log.
 
 ### `proposals/`: what the LLM agents did
 
@@ -271,7 +271,7 @@ Both agents share one client (`agents/llm_client.py`) with three providers. Set 
 |---|---|---|---|
 | Gemini | `openai` (Gemini's OpenAI-compatible endpoint) | `gemini-3.1-flash-lite` | `temperature=0`, `response_format=json_object` |
 | OpenAI | `openai` | `gpt-4o-mini` | same |
-| Claude | `anthropic` (`agents/claude_client.py`) | `claude-opus-5-5` (`CLAUDE_MODEL`; `claude-sonnet-5-5` / `claude-haiku-5-5` cost less) | Current Claude models always think and don't accept `temperature`; `effort` (`CLAUDE_EFFORT`, default `low`) sets depth, the cache provides repeatability. `max_tokens` is at least 16k because thinking counts towards it. The server-side refusal fallback (`fallbacks: "default"`) is enabled on models that support it. No `base_url` is needed; the SDK uses Anthropic's API (override with `ANTHROPIC_BASE_URL` if you use a gateway). Not live-tested here (no Anthropic key); the dry-run, missing-credentials and JSON-parsing paths are tested. |
+| Claude | `anthropic` (`agents/claude_client.py`) | `claude-opus-5-5` (`CLAUDE_MODEL`; `claude-sonnet-5-5` / `claude-haiku-5-5` cost less) | Current Claude models always think and don't accept `temperature`; `effort` (`CLAUDE_EFFORT`, default `low`) sets depth, the cache provides repeatability. `max_tokens` is at least 16k because thinking counts towards it. The server-side refusal fallback (`fallbacks: "default"`) is enabled on models that support it. No `base_url` is needed; the SDK uses Anthropic's API (override with `ANTHROPIC_BASE_URL` if you use a gateway). Run live for the Assessment below (Opus 5.5); the dry-run, missing-credentials and JSON-parsing paths are also tested. |
 
 - **Context given:** quality agent gets a column profile (blank %, cardinality, top values and shapes, numeric percentiles and IQR outliers). Semantic agent gets distinct category values with counts, up to two sample descriptions for rare values, and the fixed taxonomy. No few-shot examples; the hand-built mapping is only used to score the output.
 - **Stable prompts:** every profile query breaks ties in its `ORDER BY`, so identical data gives a byte-identical prompt and a cache hit on any database.
@@ -280,16 +280,21 @@ Both agents share one client (`agents/llm_client.py`) with three providers. Set 
 - **Output caps:** `max_output_tokens=3500` (Gemini/OpenAI), at least 16k for Claude.
 - **Guardrails:** quality agent: Python must pass `ast.parse`, SQL is rejected if it contains DDL/DML keywords, columns and expectation types are allow-listed, and GX must accept the arguments. Semantic agent: known keys only, taxonomy labels only, 95% coverage floor. Everything dropped is listed in the run report.
 - **Caching:** responses keyed by `(model, prompt_hash)` in `.agent_cache/` (git-ignored).
-- **Cost:** `--dry-run` estimates input tokens and worst-case cost with no network call, and says when the answer is already cached. Dollar cost is computed for models in the `PRICES` table (OpenAI and Claude). Gemini prices change often and are not hard-coded, so Gemini runs show `$unknown` and `estimated_cost_usd` is NULL; tokens are still tracked. Dry-run estimates for one run: Claude Opus 5.5 ≈ $0.08 worst case (either agent), Haiku 5.5 ≈ $0.002 (quality).
+- **Cost:** `--dry-run` estimates input tokens and worst-case cost with no network call, and says when the answer is already cached. Dollar cost is computed for models in the `PRICES` table (OpenAI and Claude). Gemini prices change often and are not hard-coded, so Gemini runs show `$unknown` and `estimated_cost_usd` is NULL; tokens are still tracked. The dry-run estimate is a worst case (it assumes the full output cap, 16k tokens on Claude): about $0.33 per agent run on Opus 5.5 and about $0.008 on Haiku 5.5. The live Opus run actually cost $0.057 (semantic) and $0.108 (quality).
 - **Logging:** every call (hit or miss, tokens, latency, status) goes to `lineage.agent_runs`; with `--with-agents` each agent is also a stage in `lineage.pipeline_runs`.
 
 ### Assessment
 
-> Figures below are from an earlier live run with Gemini `gemini-3.1-flash-lite`.
+> Figures are from the committed live run: both agents on Claude Opus 5.5 (`claude-opus-5-5`, effort `low`) via `run.py --stage all --with-agents` on 2026-10-17. Tokens and cost are from `lineage.agent_runs`; the full outputs are in `proposals/`.
+
+| | Requests | Tokens in / out | Estimated cost | Time |
+|---|---|---|---|---|
+| Semantic agent | 1 | 4,961 / 1,858 | $0.057 | 15 s |
+| Quality agent | 1 | 6,210 / 4,158 | $0.108 | 33 s |
+
+A second run on the same data reuses `.agent_cache/` and costs 0 tokens.
 
 #### Data Quality Agent
-
-**Run history:** an early version failed once (empty response: a thinking model exhausted `max_output_tokens`; the cap was raised). The current version succeeded: 5,476 input / 1,078 output tokens. A second database with identical bronze reused the cached answer: 0 tokens.
 
 **Sample input** (profile excerpt; `numeric_distribution` adds percentiles and IQR outliers):
 ```json
@@ -300,26 +305,30 @@ Both agents share one client (`agents/llm_client.py`) with three providers. Set 
 }
 ```
 
-**Sample output** (as written to `proposals/quality_agent_output.md`):
-```sql
--- finding: sla_hours placeholder sentinel, 557 occurrences of '999' (critical, null_out)
-CASE WHEN sla_hours = '999' THEN NULL ELSE CAST(sla_hours AS FLOAT) END
+**Sample output** (finding 2 in `proposals/quality_agent_output.md`; shown, never executed):
+```python
+# sla_hours: sentinel 999 (557 rows), plus 0, -1, N/A, NULL: null out (critical)
+def clean_sla(v):
+    s = (v or '').strip()
+    return int(s) if s in {'4', '8', '24', '48', '72'} else None
 ```
 
-**What was applied automatically:** 2 expectations (`ticket_id` not null; `ticket_id` matches `^TKT-\d+$`). They run as the `bronze_agent` suite; the regex check fails on 0.25% of rows, which are the same 26 bad IDs the DLQ rejects.
+**What it produced:** 11 findings (ticket IDs, `sla_hours`, `cost`, both date columns, a cross-column status/`resolved_at` mismatch, priority, status, building, submitter, resolution notes) and 8 expectations. The guardrails rejected nothing.
 
-**What it got wrong** (shown in the report, never executed):
+**What was applied automatically:** the 8 expectations, as the `bronze_agent` suite. Six of the eight fail on the raw data, which is the point: they measure how dirty bronze is and never block a stage. For example the ticket-ID regex fails on 26 rows (the same 26 bad IDs the DLQ rejects), and the `sla_hours` allowed-values check fails on about 40% of rows (blanks, `N/A` and the sentinels).
+
+**What it got wrong** (reported, never executed):
 
 | Finding | Problem |
 |---|---|
-| `cost`: null negatives **and zeros** | `0` is a legitimate cost; `rules.parse_cost()` keeps it. |
-| `priority`: map to `Critical/High/...` | Silver uses UPPER case (`LOW..CRITICAL`, enforced by a CHECK constraint). |
-| `sla_hours`: null `999` | Correct, but misses `0` and `-1`, which `rules.parse_sla_hours()` also nulls. |
-| `created_at`: multiple date formats | Generated Python failed `ast.parse`; rejected by the guardrail. |
+| `created_at`: parser tries `%d-%m-%Y %H:%M:%S` | The dash-separated dates in this file are month-first (`%m-%d-%Y`; the first field never exceeds 12). The agent noticed the day/month ambiguity but guessed the wrong order, so its code would swap day and month for those rows. `rules.py` uses month-first. |
+| `sla_hours`: keep only 4/8/24/48/72 | Sentinels are handled correctly, but silver accepts any value from 1 to 720 so a legitimate new tier is not discarded. |
+| `cost`: "flag 0 as possibly unknown" | `0` is a valid cost, so `rules.parse_cost()` keeps it unflagged. |
+| `cross-column`: rule also flags `resolved_at` before `created_at` | The profile has no evidence for that case, so it is a guess. Silver does flag it (`resolved_before_created`, 1,866 rows). |
+
+**What it still cannot see:** the category/description swap (the semantic agent handles it; the quality prompt tells it to skip categories) and the exact counts of the cross-column issues, which a per-column profile only hints at.
 
 #### Semantic Classification Agent
-
-**Run history:** 1 full run, 1 request for 99 distinct values: 3,734 input / 1,466 output tokens. Later `--with-agents` runs, including the incremental file, had nothing new to classify and sent no request.
 
 **Cost scaling:** cost scales with *distinct values*, not rows. 99 distinct values → 1 request whether there are 10 k or 10 M rows. Incremental mode (the default once a mapping exists) sends only spellings the current mapping lacks, and responses are cached by (model, prompt) hash.
 
@@ -339,13 +348,13 @@ cold            → HVAC         ← swapped: the category column held the descr
 ```
 
 **Scored automatically on every run** against the hand-built `config/category_mapping.json`, which is kept as a test set and fallback, not the live config:
-- Mapping agreement: **46/46** spellings (earlier version, with no fixed taxonomy: 44/46 and lowercase names).
-- Swapped sentences matching the ticket's own label: **46/46** (earlier version: 45/46).
-- Coverage 100%; 0 invented keys or off-taxonomy labels dropped.
+- Mapping agreement: **46/46** spellings.
+- Swapped sentences matching the ticket's own label: **46/46**.
+- Coverage 100%; 0 invented keys or off-taxonomy labels dropped; 46 mapped, 46 swapped values and 7 junk values left unmapped.
 
-**In silver:** `category_source` showed where each category came from: `agent` 10,200 rows, `agent_swap` 49, NULL 1 (no category). Category counts and all three gold tables were identical to the hand-built mapping (56 / 8 / 304 rows).
+**In silver:** `category_source` shows where each category came from: `agent` 10,200 rows, `agent_swap` 49, NULL 1 (no category). Category counts and all three gold tables are identical to the hand-built mapping (56 / 8 / 304 rows).
 
-**What made it work unattended:** giving it the fixed taxonomy (with one line separating "General Maintenance" from "Other") instead of letting it invent groups. That removed both earlier disagreements (casing, and `misc`/`other` → General Maintenance).
+**What made it work unattended:** giving it the fixed taxonomy (with one line separating "General Maintenance" from "Other") instead of letting it invent groups.
 
 ---
 
