@@ -1,0 +1,26 @@
+ticket_id,created_at,resolved_at,category,priority,status,building,description,submitted_by,assigned_to,cost,sla_hours,contractor_id
+TKT-3960,2024-10-24 14:32:10,12-Feb-2025 03:21,power issue,,Resolved,HQ Floor 2,Breaker keeps tripping in server room 391. Critical — affects production systems.,D. Kim,CityWide Electric,,8h,CTR-100
+TKT-3108,2024-07-25T18:27:44,2025-07-01,Fire Safety,LOW,Resolved,Building 3,smoke detector beeping Building 3,Lisa Chen,Joe (in-house),,,CTR-101
+TKT-5149,2024-06-16T04:31:56,2024-03-14 00:39:27,A/C,Medium,Open,Tower B,cold,Pat Anderson,PestPro Services,4569.86,4h,CTR-102
+TKT-3752,28-Feb-2024 17:03,2025-03-09T21:12:56,Fire/Safety,,Open,Cafeteria Block,"Emergency exit sign burnt out, Cafeteria Block 11 floor east stairwell.",M. Johnson,maintenance team,14587.72,24h,CTR-103
+TKT-11268,2024-04-15,,need more outlets in conf room 387,critical,In Progress,Tower B,Elec,jane doe,,,72h,CTR-104
+TKT-2995,02/03/2025,2024-08-16T14:57:03,Sprinkler,CRITICAL,Closed,Remote Site Beta,smoke detector beeping Remote Site Beta,K. Lee,maintenance team,13435.91,4h,CTR-105
+TKT-1579,2024-08-05 02:58:03,2025-06-10 05:20:39,Housekeeping,Low,Closed,Remote Site Beta,Restrooms on 12 floor haven't been serviced today.,C. Taylor,ABC Mechanical,-1,4h,CTR-106
+TKT-10991,02/14/2025 08:16 AM,06/21/2024 03:18 AM,hvac,Normal,Closed,Building 7,Temperature control issue in conference room 693. The thermostat reads 76 degrees but it feels much colder.,robert martinez,,,48h,CTR-107
+TKT-5543,04/09/2025,09-Dec-2024 07:56,Vertical Transport,lo,Pending Vendor,Warehouse South,Elevator H-011 stuck between floors 1 and 9. No one inside (confirmed).,Pat Anderson,vendor tech,,24h,CTR-108
+TKT-4180,2024-01-14T20:37:41,,Other,CRITICAL,Pending Vendor,HQ Floor 1,Parking lot pothole getting larger. Near spot 287.,Lisa Chen,,3159.79,,CTR-109
+TKT-8570,2024-01-19T03:11:23,2025-02-01T08:59:04,AC,CRITICAL,Resolved,Data Center 1,,R. Martinez,vendor tech,,8h,CTR-110
+TKT-7626,05/15/2025,,IT/Network,med,Escalated,Annex West,Printer on 3 floor not connecting to network. Model HP H-033.,J. Smith,vendor tech,14507.35,48h,CTR-111
+TKT-10954,04/26/2025 10:33 PM,12-Jun-2025 07:39,electrical,low,Resolved,Main Office,Breaker keeps tripping in server room 738. Critical — affects production systems.,C. Taylor,overnight crew,1961.82,N/A,CTR-112
+TKT-5528,2025-02-17T12:41:38,,power issue,Low,Open,Annex West,Power outlet not working at desk 392. Tried multiple devices.,David Kim,Joe (in-house),5877,48h,CTR-113
+TKT-4452,2024-02-11T19:05:20,2025-03-13T20:29:03,Plumbing,medium,Resolved,HQ Floor 3,Faucet in HQ Floor 3 kitchen won't turn off completely. Constant drip.,Lisa Chen,PestPro Services,,8h,CTR-114
+TKT-3554,2024-11-13,,Badge/Access,high,In Progress,Tower B,Door 118 won't lock. Handle mechanism seems broken.,Lisa Chen,PestPro Services,8685.61,,CTR-115
+TKT-8739,2025-05-09T20:32:37,03/12/2024,Plumbing,CRITICAL,Open,Tower B,Toilet in 2 floor men's restroom is overflowing. Urgent.,Jordan Rivera,PestPro Services,3827.3,,CTR-116
+TKT-10656,02-02-2025 18:00:26,,Sprinkler,Low,In Progress,Cafeteria Block,"Fire alarm triggered in Cafeteria Block, 2 floor. No visible fire. Possible sensor malfunction.",J. Smith,,5815.03,8h,CTR-117
+TKT-8121,2024-07-13 01:03:59,06/06/2025 12:38 AM,elevator/escalator,Medium,Closed,Cafeteria Block,elevator out of order again Cafeteria Block,John Smith,,12352.22,999h,CTR-118
+TKT-9342,2024-06-03,,Security Systems,CRITICAL,Escalated,Parking Garage,alarm going off Parking Garage no apparent reason,S. Williams,maintenance team,,48h,CTR-119
+TKT-6632,2024-12-21 13:11:57,02/12/2025 02:28 AM,CLEANING,low,In Progress,Remote Site Beta,Conference room 848 needs deep cleaning before client visit tomorrow.,John Smith,,5847,48h,CTR-120
+TKT-8458,08/04/2024 05:19 AM,,pest control,,Pending Vendor,Cafeteria Block,"Wasp nest forming on Cafeteria Block exterior, near entrance.",jane doe,,2632,72h,CTR-121
+TKT-4887,12/23/2024,,HVAC System,MED,Escalated,Remote Site Alpha,"Heating system making loud banging noises in Remote Site Alpha, 6 floor. Started yesterday.",R. Martinez,,6157.46,72h,CTR-122
+TKT-5086,2025-03-21 07:13:19,09/26/2024,Vertical Transport,HIGH,Open,HQ Floor 2,Elevator making grinding noise. HQ Floor 2 main elevator.,Mike Johnson,overnight crew,,4h,CTR-123
+TKT-3929,2024-06-02 01:46:16,,Misc,low,In Progress,HQ Floor 1,Furniture request — need 3 additional chairs for room 579.,L. Chen,ABC Mechanical,,48h,CTR-124

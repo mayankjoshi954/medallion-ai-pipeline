@@ -1,0 +1,8 @@
+psycopg2-binary==2.9.13
+pandas==3.0.6
+pandera==0.34.1
+great_expectations==1.24.0
+openai==3.33.0
+anthropic==1.15.0
+python-dotenv==1.2.4
+pytest==9.1.1

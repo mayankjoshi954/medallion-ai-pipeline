@@ -1,0 +1,59 @@
+{
+  "_comment": "Lower-cased, whitespace-collapsed raw category -> canonical category. Hand-authored baseline; the Semantic Classification Agent's proposal (proposals/category_mapping.json) is diffed against it and promoted by a human.",
+  "exterminator": "Pest Control",
+  "pest": "Pest Control",
+  "pest control": "Pest Control",
+
+  "fire safety": "Fire Safety",
+  "fire/safety": "Fire Safety",
+  "fire alarm": "Fire Safety",
+  "sprinkler": "Fire Safety",
+
+  "plumbing": "Plumbing",
+  "plumbing issue": "Plumbing",
+  "water/plumbing": "Plumbing",
+  "water issue": "Plumbing",
+
+  "security": "Security & Access",
+  "security systems": "Security & Access",
+  "access control": "Security & Access",
+  "badge/access": "Security & Access",
+
+  "cleaning": "Cleaning",
+  "housekeeping": "Cleaning",
+  "janitorial": "Cleaning",
+
+  "elevator": "Elevator",
+  "elevator/escalator": "Elevator",
+  "vertical transport": "Elevator",
+  "lift": "Elevator",
+
+  "electrical": "Electrical",
+  "electrical systems": "Electrical",
+  "elec": "Electrical",
+  "power": "Electrical",
+  "power issue": "Electrical",
+
+  "it": "IT & Network",
+  "it/network": "IT & Network",
+  "it support": "IT & Network",
+  "network": "IT & Network",
+  "connectivity": "IT & Network",
+  "wifi": "IT & Network",
+
+  "hvac": "HVAC",
+  "hvac system": "HVAC",
+  "ac": "HVAC",
+  "a/c": "HVAC",
+  "air conditioning": "HVAC",
+  "heating/cooling": "HVAC",
+  "heating cooling": "HVAC",
+  "climate control": "HVAC",
+
+  "maintenance": "General Maintenance",
+  "general maintenance": "General Maintenance",
+  "general": "General Maintenance",
+
+  "misc": "Other",
+  "other": "Other"
+}

@@ -1,0 +1,54 @@
+{
+  "assigned_to": {
+    "dtype": "string",
+    "nullable": true
+  },
+  "building": {
+    "dtype": "string",
+    "nullable": true
+  },
+  "category": {
+    "dtype": "string",
+    "nullable": true
+  },
+  "cost": {
+    "dtype": "string",
+    "nullable": true
+  },
+  "created_at": {
+    "dtype": "string",
+    "nullable": true
+  },
+  "description": {
+    "dtype": "string",
+    "nullable": true
+  },
+  "priority": {
+    "dtype": "string",
+    "nullable": true
+  },
+  "resolution_notes": {
+    "dtype": "string",
+    "nullable": true
+  },
+  "resolved_at": {
+    "dtype": "string",
+    "nullable": true
+  },
+  "sla_hours": {
+    "dtype": "float64",
+    "nullable": true
+  },
+  "status": {
+    "dtype": "string",
+    "nullable": true
+  },
+  "submitted_by": {
+    "dtype": "string",
+    "nullable": true
+  },
+  "ticket_id": {
+    "dtype": "string",
+    "nullable": true
+  }
+}
