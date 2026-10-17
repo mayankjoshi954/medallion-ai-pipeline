@@ -296,6 +296,10 @@ A second run on the same data reuses `.agent_cache/` and costs 0 tokens.
 
 #### Data Quality Agent
 
+**What it does:** profiles the bronze table with SQL (blank rate, cardinality, top values and shapes, numeric percentiles and outliers), asks the LLM for findings that explain why each issue matters plus Great Expectations checks, applies the checks that pass the guardrails, and reports the suggested code without running it.
+
+**Honest take:** good at explaining *why* a column matters and at spotting the `999` SLA sentinel once the profile included outlier statistics. It did not save coding time: its suggested code still needs checking (the latest run guessed the wrong day/month order for dash dates), which is why code is reported and never run. It saved roughly 20 minutes of write-up, not engineering time.
+
 **Sample input** (profile excerpt; `numeric_distribution` adds percentiles and IQR outliers):
 ```json
 {
@@ -329,6 +333,10 @@ def clean_sla(v):
 **What it still cannot see:** the category/description swap (the semantic agent handles it; the quality prompt tells it to skip categories) and the exact counts of the cross-column issues, which a per-column profile only hints at.
 
 #### Semantic Classification Agent
+
+**What it does:** takes the distinct raw category spellings, maps each one to a fixed list of 11 categories, and flags the values where the category column actually holds a description. Silver uses the result directly.
+
+**Honest take:** clearly worth it. It saved about 30 minutes of hand-classifying the 46 swapped-column descriptions and removed the manual merge step. It matched my hand-built mapping 46/46 at a cost of one request (about $0.06 on Opus). It only worked unattended once I gave it the fixed category list; left alone it invented its own groups.
 
 **Cost scaling:** cost scales with *distinct values*, not rows. 99 distinct values → 1 request whether there are 10 k or 10 M rows. Incremental mode (the default once a mapping exists) sends only spellings the current mapping lacks, and responses are cached by (model, prompt) hash.
 
